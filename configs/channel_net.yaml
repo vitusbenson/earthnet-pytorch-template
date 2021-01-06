@@ -1,0 +1,63 @@
+Seed: 42
+Architecture: "channel_net"
+Data:
+    base_dir: "/scratch/EarthNet2021/"
+    test_track: "iid"
+    noisy_masked_pixels: True
+    use_meso_static_as_dynamic: True
+    fp16: False
+    val_pct: 0.01
+    val_split_seed: 42
+    train_batch_size: 48
+    val_batch_size: 64
+    test_batch_size: 64
+    num_workers: 6
+
+Task:
+    loss:
+        name: "masked"
+        args: {
+            distance_type: "L1"
+        }
+    context_length: 10
+    target_length: 20
+    n_stochastic_preds: 1
+    optimization:
+        optimizer:
+            - 
+                name: 'Adam'
+                args: 
+                    lr: 0.05
+                    betas: [0.9, 0.999]
+        lr_shedule:
+            -
+                name: 'MultiStepLR'
+                args:
+                    milestones: [2, 15, 50, 90]
+                    gamma: 0.1
+    keep_val_preds: True
+    n_log_batches: 1
+
+Logger:
+    save_dir: "experiments/"
+    name: "Channel net densenet161 unet"
+
+Trainer:
+    gpus: 4
+    distributed_backend: 'ddp'
+    #deterministic: True
+    log_every_n_steps: 10
+    #profiler: 'simple'
+    #fast_dev_run: True
+    #log_gpu_memory: 'all'
+    #weights_summary: 'full'
+    max_epochs: 100
+
+Model:
+    name: "Unet"
+    args: 
+        encoder_name: "resnet34"
+        encoder_weights: "imagenet"
+        in_channels: 191
+        classes: 80
+        activation: "sigmoid"
